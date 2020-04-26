@@ -107,10 +107,12 @@ def tfidf(df):
 
 def ngram_vsm(df, n=2):
     """Create a character-level VSM from `df`.
+    Josh: for all n-grams, generate a vector reprsentation for the ngram where
+    each ngram is represented as the sum of all the word vectors that contain the ngram
 
     Parameters
     ----------
-    df : pd.DataFrame
+    df : pd.DataFrame: each row a word, with column dimension equal to vector space dim
     n : int
         The n-gram size.
 
@@ -123,11 +125,13 @@ def ngram_vsm(df, n=2):
 
     """
     unigram2vecs = defaultdict(list)
-    for w, x in df.iterrows():
-        for c in get_character_ngrams(w, n):
-            unigram2vecs[c].append(x)
-    unigram2vecs = {c: np.array(x).sum(axis=0)
-                    for c, x in unigram2vecs.items()}
+    for w, x in df.iterrows():                  # for each (word, vector)
+        for c in get_character_ngrams(w, n):    # get all possible sequential combos of len n
+            unigram2vecs[c].append(x)           # for each combo, we append any word that contains that combo
+    unigram2vecs = {c: np.array(x).sum(axis=0)  # sums the columns so that we pool into a single vector
+                    for c, x in unigram2vecs.items()}   # x is a list of rows
+                                                # creates dict of {char_combo: vector representation}
+                                                # where vector repr is a sum of all the words containing this char combo
     cf = pd.DataFrame(unigram2vecs).T
     cf.columns = df.columns
     return cf
